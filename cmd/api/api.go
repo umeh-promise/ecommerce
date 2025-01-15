@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"net/http"
 	"os"
@@ -12,17 +13,15 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
-	"github.com/jmoiron/sqlx"
 	"github.com/umeh-promise/ecommerce/utils"
-	"go.uber.org/zap"
 )
 
 type APIServer struct {
 	addr string
-	db   *sqlx.DB
+	db   *sql.DB
 }
 
-func NewAPIServer(addr string, db *sqlx.DB) *APIServer {
+func NewAPIServer(addr string, db *sql.DB) *APIServer {
 	return &APIServer{addr: addr, db: db}
 }
 
@@ -53,8 +52,6 @@ func (s *APIServer) mount() *chi.Mux {
 
 func (s *APIServer) Run() error {
 
-	logger := zap.Must(zap.NewProduction()).Sugar()
-	defer logger.Sync()
 	handler := s.mount()
 
 	server := &http.Server{
@@ -65,7 +62,7 @@ func (s *APIServer) Run() error {
 		IdleTimeout:  time.Minute,
 	}
 
-	logger.Info("Server has started at ", s.addr)
+	utils.Logger.Info("Server has started at ", s.addr)
 
 	shutdown := make(chan error)
 
@@ -78,7 +75,7 @@ func (s *APIServer) Run() error {
 		ctx, cancel := context.WithTimeout(context.Background(), utils.QueryTimeout)
 		defer cancel()
 
-		logger.Info("Server signal ", s.String(), "caught")
+		utils.Logger.Info("Server signal ", s.String(), "caught")
 		shutdown <- server.Shutdown(ctx)
 	}()
 
@@ -91,7 +88,7 @@ func (s *APIServer) Run() error {
 		return err
 	}
 
-	logger.Info("Server existed", "addr ", s.addr)
+	utils.Logger.Info("Server existed", "addr ", s.addr)
 
 	return nil
 }
