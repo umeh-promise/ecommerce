@@ -2,15 +2,15 @@ package db
 
 import (
 	"context"
+	"database/sql"
 	"time"
 
-	"github.com/jmoiron/sqlx"
 	"github.com/umeh-promise/ecommerce/utils"
 )
 
-func NewDBConnection(addr string, maxOpenConn, maxIdleConn int, maxIdleTime string) (*sqlx.DB, error) {
+func NewDBConnection(addr string, maxOpenConn, maxIdleConn int, maxIdleTime string) (*sql.DB, error) {
 
-	db, err := sqlx.Open("postgres", addr)
+	db, err := sql.Open("postgres", addr)
 	if err != nil {
 		return nil, err
 	}
