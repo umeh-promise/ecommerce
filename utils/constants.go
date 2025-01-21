@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"context"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -13,16 +12,21 @@ const QueryTimeout = 5 * time.Second
 var Logger *zap.SugaredLogger
 var Validator *validator.Validate
 
-func ExtendContextDuration(ctx context.Context) context.Context {
-	ctx, cancel := context.WithTimeout(ctx, QueryTimeout)
-	defer cancel()
-
-	return ctx
-}
+var (
+	tokenExp    = time.Hour * 24
+	tokenIssuer = "ecommerce"
+	authSecret  = GetString("AUTH_SECRET", "basic")
+)
 
 func init() {
 	Logger = zap.Must(zap.NewProduction()).Sugar()
 	defer Logger.Sync()
 
 	Validator = validator.New(validator.WithRequiredStructEnabled())
+}
+
+func AssignIfNotNil(dest *string, src *string) {
+	if src != nil {
+		*dest = *src
+	}
 }
