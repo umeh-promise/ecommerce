@@ -17,21 +17,21 @@ func NewHandler(store UserStore) *Handler {
 	return &Handler{store: store}
 }
 
-func (h *Handler) RegisterRoute() chi.Router {
-	router := chi.NewRouter()
+func (h *Handler) RegisterRoute() func(r chi.Router) {
+	return func(r chi.Router) {
 
-	router.Route("/auth", func(r chi.Router) {
-		r.Post("/register", h.registerUser)
-		r.Post("/login", h.loginUser)
-		r.Route("/user", func(r chi.Router) {
-			r.Use(h.AuthTokenMiddleware)
-			r.Get("/", h.getUser)
-			r.Put("/", h.updateUser)
-			r.Put("/change-password", h.changePassword)
+		r.Route("/auth", func(r chi.Router) {
+			r.Post("/register", h.registerUser)
+			r.Post("/login", h.loginUser)
+
+			r.Route("/user", func(r chi.Router) {
+				r.Use(h.AuthTokenMiddleware)
+				r.Get("/", h.getUser)
+				r.Put("/", h.updateUser)
+				r.Put("/change-password", h.changePassword)
+			})
 		})
-	})
-
-	return router
+	}
 }
 
 func (h *Handler) registerUser(w http.ResponseWriter, r *http.Request) {

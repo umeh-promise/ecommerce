@@ -108,14 +108,14 @@ func (s *Store) GetUserByEmail(ctx context.Context, email string) (*User, error)
 func (s *Store) UpdateUser(ctx context.Context, user *User) error {
 	query := `
 		UPDATE users 
-		SET first_name = $1, last_name = $2, dob = $3, gender = $4, profile_picture = $5
-		WHERE id = $6
+		SET first_name = $1, last_name = $2, dob = $3, gender = $4, profile_picture = $5, version = version + 1
+		WHERE id = $6 AND version = $7
 		RETURNING version
 	`
 
 	ctx, cancel := context.WithTimeout(ctx, utils.QueryTimeout)
 	defer cancel()
-	err := s.db.QueryRowContext(ctx, query, user.ID).Scan(&user.Version)
+	err := s.db.QueryRowContext(ctx, query, user.FirstName, user.LastName, user.DOB, user.Gender, user.ID, user.ProfilePicture, user.Version).Scan(&user.Version)
 	if err != nil {
 		switch err {
 		case sql.ErrNoRows:
