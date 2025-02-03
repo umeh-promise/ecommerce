@@ -10,17 +10,9 @@ import (
 	"github.com/umeh-promise/ecommerce/utils"
 )
 
-// type AuthMiddleware struct {
-// 	store UserStore
-// }
-
 type userKey string
 
 var userCtx userKey = "user"
-
-// func NewAuthMiddleware(store UserStore) *AuthMiddleware {
-// 	return &AuthMiddleware{store: store}
-// }
 
 func (middleware *Handler) AuthTokenMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

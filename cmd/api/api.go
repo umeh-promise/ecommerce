@@ -13,6 +13,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"github.com/umeh-promise/ecommerce/internal/services/products"
 	"github.com/umeh-promise/ecommerce/internal/services/user"
 	"github.com/umeh-promise/ecommerce/utils"
 )
@@ -26,7 +27,7 @@ func NewAPIServer(addr string, db *sql.DB) *APIServer {
 	return &APIServer{addr: addr, db: db}
 }
 
-func (s *APIServer) mount(routerGroups ...chi.Router) *chi.Mux {
+func (s *APIServer) mount(routerGroups ...func(r chi.Router)) *chi.Mux {
 	router := chi.NewRouter()
 	router.Use(middleware.RequestID)
 	router.Use(middleware.RealIP)
@@ -43,9 +44,11 @@ func (s *APIServer) mount(routerGroups ...chi.Router) *chi.Mux {
 	// router.Use(app.RateLimitMiddleware)
 	router.Use(middleware.Timeout(60 * time.Second))
 
-	for _, subRouter := range routerGroups {
-		router.Mount("/v1", subRouter)
-	}
+	router.Route("/v1", func(router chi.Router) {
+		for _, subRouter := range routerGroups {
+			router.Group(subRouter)
+		}
+	})
 
 	return router
 }
@@ -54,8 +57,12 @@ func (s *APIServer) Run() error {
 	userStore := user.NewStore(s.db)
 	userHandler := user.NewHandler(userStore)
 
+	productStore := products.NewStore(s.db)
+	productHandler := products.NewHandler(productStore)
+
 	handler := s.mount(
 		userHandler.RegisterRoute(),
+		productHandler.RegisterRoute(userHandler),
 	)
 
 	server := &http.Server{
